@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: today-benefits-proxy
+    env: node
+    buildCommand: npm install
+    startCommand: node index.js
+    envVars:
+      - key: SERVICE_KEY
+        value: xsG0WMPtWS1mUarzKPkfhWjUUvyKIqfBF34M5NHtM7PcQykB9r9bfji96dhrfkH0peDerZ6iDfVqwSoYS9SEcQ==
