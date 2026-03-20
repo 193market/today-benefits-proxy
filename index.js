@@ -45,7 +45,7 @@ app.get('/price/products', async (req, res) => {
   try {
     const response = await axios.get(`${PRICE_BASE}/getProductInfoSvc.do`, {
       params: { serviceKey: SERVICE_KEY, type: 'xml', pageNo: 1, numOfRows: 500 },
-      timeout: 10000,
+      timeout: 30000,
     });
     const json = await xmlToJson(response.data);
     // 실제 응답 구조: response.result.item
@@ -67,7 +67,7 @@ app.get('/price/stores', async (req, res) => {
   try {
     const response = await axios.get(`${PRICE_BASE}/getStoreInfoSvc.do`, {
       params: { serviceKey: SERVICE_KEY, type: 'xml', pageNo: 1, numOfRows: 1000 },
-      timeout: 10000,
+      timeout: 30000,
     });
     const json = await xmlToJson(response.data);
     const items = json?.response?.result?.item || json?.response?.result?.item || json?.response?.body?.items?.item || [];
@@ -92,7 +92,7 @@ app.get('/price/product-prices', async (req, res) => {
   try {
     const response = await axios.get(`${PRICE_BASE}/getProductPriceInfoSvc.do`, {
       params: { serviceKey: SERVICE_KEY, type: 'xml', goodId, goodInspectDay, pageNo: 1, numOfRows: 200 },
-      timeout: 10000,
+      timeout: 30000,
     });
     const json = await xmlToJson(response.data);
     const items = json?.response?.result?.item || json?.response?.body?.items?.item || [];
@@ -117,7 +117,7 @@ app.get('/price/store-prices', async (req, res) => {
   try {
     const response = await axios.get(`${PRICE_BASE}/getProductPriceInfoSvc.do`, {
       params: { serviceKey: SERVICE_KEY, type: 'xml', entpId, goodInspectDay, pageNo: 1, numOfRows: 200 },
-      timeout: 10000,
+      timeout: 30000,
     });
     const json = await xmlToJson(response.data);
     const items = json?.response?.result?.item || json?.response?.body?.items?.item || [];
