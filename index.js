@@ -287,31 +287,23 @@ app.get('/realestate/districts', (req, res) => {
 });
 
 // ══════════════════════════════════════════════════════
-// 보금자리론 금리 (한국주택금융공사) #42
+// 주택담보대출 상품 비교 (FSS 금융감독원)
+// 보금자리론 HF API 차단 → FSS 주담대로 대체
 // ══════════════════════════════════════════════════════
+const FSS_KEY = '7cdf933c0e7a5e910842eae90b292d9b';
+const FSS_BASE = 'https://finlife.fss.or.kr/finlifeapi';
+
 app.get('/housing/bogumjari', async (req, res) => {
-  const cacheKey = 'bogumjari';
+  const cacheKey = 'mortgage';
   const cached = getCached(cacheKey);
   if (cached) return res.json(cached);
 
   try {
-    const response = await axios.get(
-      'https://apis.data.go.kr/B551408/u-loan-rate/getULoanRateList',
-      {
-        params: { serviceKey: SERVICE_KEY, pageNo: 1, numOfRows: 20 },
-        timeout: 10000,
-      }
-    );
-    const data = response.data;
-    // XML or JSON 자동 감지
-    let result;
-    if (typeof data === 'string' && data.includes('<')) {
-      const json = await parseStringPromise(data, { explicitArray: false, ignoreAttrs: true });
-      result = json?.response?.body?.items?.item || json?.response?.body?.items || [];
-    } else {
-      result = data?.response?.body?.items?.item || data?.body?.items || data?.items || [];
-    }
-    const list = Array.isArray(result) ? result : [result];
+    const response = await axios.get(`${FSS_BASE}/mortgageLoanProductsSearch.json`, {
+      params: { auth: FSS_KEY, topFinGrpNo: '020000', pageNo: 1 },
+      timeout: 12000,
+    });
+    const list = response.data?.result?.baseList || [];
     setCache(cacheKey, list);
     res.json(list);
   } catch (e) {
@@ -320,30 +312,26 @@ app.get('/housing/bogumjari', async (req, res) => {
 });
 
 // ══════════════════════════════════════════════════════
-// 서민금융진흥원 대출상품한눈에 #44
+// 서민금융진흥원 대출 취급기관·상품 정보 #41
+// (햇살론15·햇살론유스·근로자햇살론·새희망홀씨 등)
 // ══════════════════════════════════════════════════════
 app.get('/finance/micro-loan', async (req, res) => {
-  const cacheKey = 'micro-loan';
+  const { pageNo = 1, numOfRows = 30 } = req.query;
+  const cacheKey = `micro-loan-${pageNo}`;
   const cached = getCached(cacheKey);
   if (cached) return res.json(cached);
 
   try {
     const response = await axios.get(
-      'https://apis.data.go.kr/B553701/LoanProductSearchingInfo/getLoanProductSearchingInfo',
+      'https://apis.data.go.kr/B553701/LoanProductHandlingAgencyInfoService/getLoanProductHandlingAgencyInfo',
       {
-        params: { serviceKey: SERVICE_KEY, pageNo: 1, numOfRows: 20 },
+        params: { serviceKey: SERVICE_KEY, pageNo, numOfRows },
         timeout: 10000,
       }
     );
-    const data = response.data;
-    let result;
-    if (typeof data === 'string' && data.includes('<')) {
-      const json = await parseStringPromise(data, { explicitArray: false, ignoreAttrs: true });
-      result = json?.response?.body?.items?.item || [];
-    } else {
-      result = data?.response?.body?.items?.item || data?.items || [];
-    }
-    const list = Array.isArray(result) ? result : [result];
+    const json = await parseStringPromise(response.data, { explicitArray: false, ignoreAttrs: true });
+    const items = json?.response?.body?.items?.item || [];
+    const list = Array.isArray(items) ? items : [items];
     setCache(cacheKey, list);
     res.json(list);
   } catch (e) {
