@@ -223,9 +223,18 @@ app.get('/realestate/trade', async (req, res) => {
         timeout: 15000,
       }
     );
-    const json = await parseStringPromise(response.data, { explicitArray: false, ignoreAttrs: true });
-    const items = json?.response?.body?.items?.item || [];
-    const list = Array.isArray(items) ? items : [items];
+    const raw = response.data;
+    let list;
+    if (typeof raw === 'string' && raw.trim().startsWith('<')) {
+      // XML 응답
+      const json = await parseStringPromise(raw, { explicitArray: false, ignoreAttrs: true });
+      const items = json?.response?.body?.items?.item || [];
+      list = Array.isArray(items) ? items : (items ? [items] : []);
+    } else {
+      // JSON 응답
+      const items = raw?.response?.body?.items?.item || raw?.items || raw || [];
+      list = Array.isArray(items) ? items : (items ? [items] : []);
+    }
     setCache(cacheKey, { district: targetDistrict, districts, list });
     res.json({ district: targetDistrict, districts, list });
   } catch (e) {
@@ -254,9 +263,16 @@ app.get('/realestate/rent', async (req, res) => {
         timeout: 15000,
       }
     );
-    const json = await parseStringPromise(response.data, { explicitArray: false, ignoreAttrs: true });
-    const items = json?.response?.body?.items?.item || [];
-    const list = Array.isArray(items) ? items : [items];
+    const raw = response.data;
+    let list;
+    if (typeof raw === 'string' && raw.trim().startsWith('<')) {
+      const json = await parseStringPromise(raw, { explicitArray: false, ignoreAttrs: true });
+      const items = json?.response?.body?.items?.item || [];
+      list = Array.isArray(items) ? items : (items ? [items] : []);
+    } else {
+      const items = raw?.response?.body?.items?.item || raw?.items || raw || [];
+      list = Array.isArray(items) ? items : (items ? [items] : []);
+    }
     setCache(cacheKey, { district: targetDistrict, districts, list });
     res.json({ district: targetDistrict, districts, list });
   } catch (e) {
