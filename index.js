@@ -5,7 +5,7 @@
  *  2. 실거래가 API (IP 차단 우회) 서버 측 호출
  *  3. 보금자리론·전세대출 금리 API
  *  4. 보조금24 통계 API
- * 업데이트: 2026-03-21
+ * 업데이트: 2026-03-22 — price.go.kr User-Agent 추가
  */
 const express = require('express');
 const axios = require('axios');
@@ -18,6 +18,7 @@ const PORT = process.env.PORT || 3000;
 const PRICE_BASE = 'http://openapi.price.go.kr/openApiImpl/ProductPriceInfoService';
 const SERVICE_KEY = process.env.SERVICE_KEY ||
   'xsG0WMPtWS1mUarzKPkfhWjUUvyKIqfBF34M5NHtM7PcQykB9r9bfji96dhrfkH0peDerZ6iDfVqwSoYS9SEcQ==';
+const PRICE_HEADERS = { 'User-Agent': 'Mozilla/5.0 (compatible; TodayBenefits-Proxy/2.0)' };
 
 app.use(cors());
 app.use(express.json());
@@ -49,6 +50,7 @@ app.get('/price/products', async (req, res) => {
   try {
     const response = await axios.get(`${PRICE_BASE}/getProductInfoSvc.do`, {
       params: { serviceKey: SERVICE_KEY, type: 'xml', pageNo: 1, numOfRows: 500 },
+      headers: PRICE_HEADERS,
       timeout: 30000,
     });
     const json = await xmlToJson(response.data);
@@ -71,6 +73,7 @@ app.get('/price/stores', async (req, res) => {
   try {
     const response = await axios.get(`${PRICE_BASE}/getStoreInfoSvc.do`, {
       params: { serviceKey: SERVICE_KEY, type: 'xml', pageNo: 1, numOfRows: 1000 },
+      headers: PRICE_HEADERS,
       timeout: 30000,
     });
     const json = await xmlToJson(response.data);
@@ -96,6 +99,7 @@ app.get('/price/product-prices', async (req, res) => {
   try {
     const response = await axios.get(`${PRICE_BASE}/getProductPriceInfoSvc.do`, {
       params: { serviceKey: SERVICE_KEY, type: 'xml', goodId, goodInspectDay, pageNo: 1, numOfRows: 200 },
+      headers: PRICE_HEADERS,
       timeout: 30000,
     });
     const json = await xmlToJson(response.data);
@@ -121,6 +125,7 @@ app.get('/price/store-prices', async (req, res) => {
   try {
     const response = await axios.get(`${PRICE_BASE}/getProductPriceInfoSvc.do`, {
       params: { serviceKey: SERVICE_KEY, type: 'xml', entpId, goodInspectDay, pageNo: 1, numOfRows: 200 },
+      headers: PRICE_HEADERS,
       timeout: 30000,
     });
     const json = await xmlToJson(response.data);
@@ -149,8 +154,8 @@ app.get('/price/discounts', async (req, res) => {
       params: {
         serviceKey: SERVICE_KEY, type: 'xml',
         goodInspectDay, pageNo: 1, numOfRows: 500,
-        // entpId 없으면 전체 판매점 전체 상품
       },
+      headers: PRICE_HEADERS,
       timeout: 15000,
     });
     const json = await xmlToJson(response.data);
@@ -339,6 +344,6 @@ app.get('/finance/micro-loan', async (req, res) => {
   }
 });
 
-app.get('/health', (req, res) => res.json({ status: 'ok', version: '2.0', time: new Date().toISOString() }));
+app.get('/health', (req, res) => res.json({ status: 'ok', version: '2.1', time: new Date().toISOString() }));
 
 app.listen(PORT, () => console.log(`프록시 서버 실행 중: http://localhost:${PORT}`));
